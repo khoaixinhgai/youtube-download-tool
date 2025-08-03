@@ -1,9 +1,4 @@
-import {
-  DownloadOutlined,
-  FolderOpenOutlined,
-  PauseOutlined,
-  PlayCircleOutlined
-} from '@ant-design/icons'
+import { DownloadOutlined, FolderOpenOutlined } from '@ant-design/icons'
 import { Button, Card, Modal, Progress, Select, Space, Typography, message } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { StyledInputChannel, StyledInputPath } from './styled'
@@ -36,7 +31,7 @@ const App: React.FC = () => {
   const [eta, setEta] = useState('')
   const [filename, setFilename] = useState('')
   const [messageLog, setMessageLog] = useState('')
-  const [isPaused, setIsPaused] = useState(false)
+  const [_isPaused, setIsPaused] = useState(false)
 
   const handleSelectFolder = async () => {
     setIsSelectingFolder(true)
@@ -57,12 +52,9 @@ const App: React.FC = () => {
       message.warning('Vui lòng nhập kênh và chọn thư mục lưu.')
       return
     }
-
     try {
       setLoading(true)
       await window.api.downloadFromChannel(channel, resolution, savePath, downloadType)
-      message.success('Tải xuống thành công!')
-      await window.api.openFolder(savePath)
     } catch (error) {
       message.error('Có lỗi xảy ra. Liên hệ Thành để xử lý.')
     } finally {
@@ -71,19 +63,19 @@ const App: React.FC = () => {
     }
   }
 
-  const togglePause = async () => {
-    try {
-      if (!isPaused) {
-        await window.api.pauseDownload?.()
-        setIsPaused(true)
-      } else {
-        await window.api.resumeDownload?.()
-        setIsPaused(false)
-      }
-    } catch (err) {
-      message.error('Không thể thay đổi trạng thái tải.')
-    }
-  }
+  // const togglePause = async () => {
+  //   try {
+  //     if (!isPaused) {
+  //       await window.api.pauseDownload?.()
+  //       setIsPaused(true)
+  //     } else {
+  //       await window.api.resumeDownload?.()
+  //       setIsPaused(false)
+  //     }
+  //   } catch (err) {
+  //     message.error('Không thể thay đổi trạng thái tải.')
+  //   }
+  // }
 
   const handleCancel = async () => {
     Modal.confirm({
@@ -95,7 +87,6 @@ const App: React.FC = () => {
       onOk: async () => {
         try {
           await window.api.cancelDownload?.()
-          message.warning('Đã hủy tải xuống.')
           setProgress(null)
           setSpeed('')
           setEta('')
@@ -133,7 +124,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    const handleProgress = (data: any) => {
+    const handleProgress = async (data: any) => {
       if (data.type === 'progress') {
         setProgress(data.percent)
         setSpeed(data.speed)
@@ -147,6 +138,12 @@ const App: React.FC = () => {
         setEta('')
         setFilename('')
         setMessageLog('')
+        if (data.canceled) {
+          message.warning('Đã huỷ tải xuống.')
+        } else if (data.success) {
+          message.success('Tải xuống thành công!')
+          await window.api.openFolder(savePath)
+        }
       }
     }
 
@@ -228,18 +225,9 @@ const App: React.FC = () => {
             Tải xuống
           </Button>
           {loading && (
-            <>
-              <Button
-                icon={isPaused ? <PlayCircleOutlined /> : <PauseOutlined />}
-                onClick={togglePause}
-                danger={isPaused}
-              >
-                {isPaused ? 'Tiếp tục' : 'Tạm dừng'}
-              </Button>
-              <Button danger onClick={handleCancel}>
-                Hủy
-              </Button>
-            </>
+            <Button danger onClick={handleCancel}>
+              Hủy
+            </Button>
           )}
         </Space>
 

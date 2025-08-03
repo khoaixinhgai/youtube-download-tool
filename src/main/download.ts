@@ -2,7 +2,7 @@ import { ChildProcess, spawn } from 'child_process'
 import { app } from 'electron'
 import fs from 'fs'
 import path from 'path'
-import os from 'os'
+import kill from 'tree-kill'
 
 type ProgressData =
   | {
@@ -19,12 +19,14 @@ type ProgressData =
   | {
       type: 'done'
       success: boolean
+      canceled?: boolean
     }
 
 type ProgressCallback = (data: ProgressData) => void
 
 let currentDownloadProcess: ChildProcess | null = null
 let isPaused = false
+let wasCancelled = false
 
 const isDev = !app.isPackaged
 
@@ -70,7 +72,7 @@ export function downloadFromChannel(
     const ytDlpArgs: string[] = [
       channelUrl,
       '-o',
-      `${outputDir}/%(title)s.%(ext)s`,
+      `${outputDir}/%(autonumber)d-%(title)s.%(ext)s`,
       '--format',
       `bv[height=${resolution}][ext=mp4][vcodec^=avc1]+ba[ext=m4a][acodec^=mp4a]/best[height=${resolution}]/best`,
       '--merge-output-format',
@@ -126,6 +128,10 @@ export function downloadFromChannel(
     proc.on('close', (code: number) => {
       currentDownloadProcess = null
       isPaused = false
+      if (wasCancelled) {
+        onProgress({ type: 'done', success: false, canceled: true })
+        return resolve()
+      }
       onProgress({ type: 'done', success: code === 0 })
       code === 0 ? resolve() : reject(new Error(`Download failed with code ${code}`))
     })
@@ -141,23 +147,44 @@ export function downloadFromChannel(
 }
 
 export function pauseDownload(): void {
-  if (currentDownloadProcess && !isPaused) {
-    currentDownloadProcess.kill('SIGSTOP')
-    isPaused = true
+  if (currentDownloadProcess && !isPaused && !currentDownloadProcess.killed) {
+    try {
+      currentDownloadProcess.kill('SIGSTOP')
+      isPaused = true
+      console.log('Download paused.')
+    } catch (err) {
+      console.error('Failed to pause download:', err)
+    }
+  } else {
+    console.warn('Cannot pause: No active or already paused process.')
   }
 }
 
 export function resumeDownload(): void {
-  if (currentDownloadProcess && isPaused) {
-    currentDownloadProcess.kill('SIGCONT')
-    isPaused = false
+  if (currentDownloadProcess && isPaused && !currentDownloadProcess.killed) {
+    try {
+      currentDownloadProcess.kill('SIGCONT')
+      isPaused = false
+      console.log('Download resumed.')
+    } catch (err) {
+      console.error('Failed to resume download:', err)
+    }
+  } else {
+    console.warn('Cannot resume: No paused process or already running.')
   }
 }
 
 export function cancelDownload(): void {
-  if (currentDownloadProcess) {
-    currentDownloadProcess.kill('SIGKILL')
-    currentDownloadProcess = null
-    isPaused = false
+  if (currentDownloadProcess && currentDownloadProcess.pid) {
+    wasCancelled = true
+    kill(currentDownloadProcess.pid, 'SIGKILL', (err) => {
+      if (!err) {
+        console.log('Download canceled.')
+        currentDownloadProcess = null
+        isPaused = false
+      } else {
+        console.error('Failed to cancel:', err)
+      }
+    })
   }
 }
