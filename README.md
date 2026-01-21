@@ -17,7 +17,7 @@ It leverages [yt-dlp](https://github.com/yt-dlp/yt-dlp) for downloading and [ffm
 
 ```bash
 ├── resources/
-│   ├── bin/              # External binaries (yt-dlp, ffmpeg)
+│   ├── bin/              # External binaries (Downloaded automatically via postinstall)
 │   │   ├── essentials/   # (Temp folder for building)
 │   │   ├── ffmpeg        # macOS ffmpeg
 │   │   ├── ffmpeg.exe    # Windows ffmpeg (Essentials build)
@@ -47,6 +47,7 @@ cd youtube-download-tool
 
 # Install dependencies
 yarn install
+# Note: This will automatically download necessary binaries (yt-dlp, ffmpeg) to resources/bin/
 ```
 
 ### Development Mode
@@ -60,6 +61,7 @@ yarn dev
 ## Building for Production
 
 ### 1. For Windows (Portable Zip)
+
 This command builds a portable Zip containing the executable and all Windows-specific dependencies (yt-dlp.exe, ffmpeg.exe).
 **Note:** You can run this command on macOS! It uses a portable build strategy.
 
@@ -69,11 +71,13 @@ yarn build:win
 ```
 
 > **Usage on Windows:**
+>
 > 1. Download/Transfer the `.zip` file to Windows.
 > 2. Right-click > **"Extract All..."**.
 > 3. Open the folder and run **`YouTubeDownloader.exe`**.
 
 ### 2. For macOS
+
 Builds a `.dmg` installer for macOS.
 
 ```bash
@@ -84,14 +88,17 @@ yarn build:mac
 ## Troubleshooting
 
 ### "HTTP Error 403: Forbidden"
+
 - **Cause:** YouTube may block requests from outdated `yt-dlp` versions or specific IPs.
 - **Fix:** restart the app or check if `resources/bin/yt-dlp_macos` (or `.exe`) is up to date.
 
 ### "Format Not Available" or "Only Audio"
+
 - **Cause:** Requested resolution (e.g., 1080p) might not exist, or `ffmpeg` is missing to merge streams.
 - **Fix:** The app now includes `ffmpeg` automatically. Ensure you unzip the Windows build fully.
 
 ### "This app can't run on your PC" (Windows)
+
 - **Cause:** Running an x64 app on an ARM machine (like Surface Pro X or Mac Parallels) without emulation, or vice versa.
 - **Fix:** Use the standard `yarn build:win` (x64) for most valid Windows PCs.
 

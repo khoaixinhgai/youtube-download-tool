@@ -7,4 +7,8 @@ out
 downloads
 build
 release
+resources/bin/ffmpeg
+resources/bin/ffmpeg.exe
+resources/bin/yt-dlp*
+# Keep essentials folder if used temporarily, but better to ignore final binaries
 *.log*
