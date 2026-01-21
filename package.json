@@ -16,7 +16,7 @@
     "build": "npm run typecheck && electron-vite build",
     "postinstall": "electron-builder install-app-deps",
     "build:unpack": "npm run build && electron-builder --dir",
-    "build:win": "npm run build && electron-builder --win",
+    "build:win": "npm run build && electron-builder --win --x64",
     "build:mac": "electron-vite build && electron-builder --mac",
     "build:linux": "electron-vite build && electron-builder --linux"
   },
@@ -27,7 +27,6 @@
       "out/**/*",
       "dist/**/*",
       "node_modules/**/*",
-      "resources/bin/**/*",
       "package.json"
     ],
     "directories": {
@@ -36,26 +35,34 @@
     "mac": {
       "target": "dmg",
       "category": "public.app-category.video",
-      "icon": "resources/icon.png"
+      "icon": "resources/icon.png",
+      "extraResources": [
+        {
+          "from": "resources/bin/yt-dlp_macos",
+          "to": "bin/yt-dlp_macos"
+        },
+        {
+          "from": "resources/bin/ffmpeg",
+          "to": "bin/ffmpeg"
+        }
+      ]
     },
     "win": {
-      "target": "nsis",
-      "icon": "resources/icon.png"
+      "target": "zip",
+      "icon": "resources/icon.png",
+      "extraResources": [
+        {
+          "from": "resources/bin/yt-dlp.exe",
+          "to": "bin/yt-dlp.exe"
+        },
+        {
+          "from": "resources/bin/ffmpeg.exe",
+          "to": "bin/ffmpeg.exe"
+        }
+      ]
     },
-    "extraResources": [
-      {
-        "from": "resources/bin/yt-dlp.exe",
-        "to": "bin/yt-dlp.exe"
-      },
-      {
-        "from": "resources/bin/yt-dlp_macos",
-        "to": "bin/yt-dlp_macos"
-      },
-      {
-        "from": "resources/bin/yt-dlp_linux",
-        "to": "bin/yt-dlp_linux"
-      }
-    ],
+
+
     "asarUnpack": [
       "**/bin/**"
     ]

@@ -1,11 +1,29 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
 
+type ProgressData =
+  | {
+      type: 'progress'
+      percent: number
+      speed: string
+      eta: string
+      filename: string
+    }
+  | {
+      type: 'log'
+      message: string
+    }
+  | {
+      type: 'done'
+      success: boolean
+      canceled?: boolean
+    }
+
 const api = {
   downloadFromChannel: (channel: string, resolution: number, savePath: string, type: string) =>
     ipcRenderer.invoke('download-from-channel', { channel, resolution, savePath, type }),
   selectFolder: () => ipcRenderer.invoke('select-folder'),
-  onDownloadProgress: (callback: (data: any) => void) => {
+  onDownloadProgress: (callback: (data: ProgressData) => void) => {
     ipcRenderer.on('download-progress', (_, data) => callback(data))
   },
   removeProgressListener: () => {
@@ -25,8 +43,8 @@ if (process.contextIsolated) {
     console.error(error)
   }
 } else {
-  // @ts-ignore
+  // @ts-ignore (define in dts)
   window.electron = electronAPI
-  // @ts-ignore
+  // @ts-ignore (define in dts)
   window.api = api
 }

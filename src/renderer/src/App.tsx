@@ -31,9 +31,9 @@ const App: React.FC = () => {
   const [eta, setEta] = useState('')
   const [filename, setFilename] = useState('')
   const [messageLog, setMessageLog] = useState('')
-  const [_isPaused, setIsPaused] = useState(false)
+  // const [_isPaused, setIsPaused] = useState(false)
 
-  const handleSelectFolder = async () => {
+  const handleSelectFolder = async (): Promise<void> => {
     setIsSelectingFolder(true)
     try {
       const folder = await window.api.selectFolder?.()
@@ -47,7 +47,7 @@ const App: React.FC = () => {
     }
   }
 
-  const handleDownload = async () => {
+  const handleDownload = async (): Promise<void> => {
     if (!channel || !savePath) {
       message.warning('Vui lòng nhập kênh và chọn thư mục lưu.')
       return
@@ -56,10 +56,17 @@ const App: React.FC = () => {
       setLoading(true)
       await window.api.downloadFromChannel(channel, resolution, savePath, downloadType)
     } catch (error) {
-      message.error('Có lỗi xảy ra. Liên hệ Thành để xử lý.')
+      console.error(error)
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      const ytDlpErrorMatch = errorMessage.match(/ERROR: \[.*\] .*/)
+      if (ytDlpErrorMatch) {
+        message.error(ytDlpErrorMatch[0], 10)
+      } else {
+        message.error('Có lỗi xảy ra. Liên hệ Thành để xử lý.', 10)
+      }
     } finally {
       setLoading(false)
-      setIsPaused(false)
+      // setIsPaused(false)
     }
   }
 
@@ -77,7 +84,7 @@ const App: React.FC = () => {
   //   }
   // }
 
-  const handleCancel = async () => {
+  const handleCancel = async (): Promise<void> => {
     Modal.confirm({
       title: 'Xác nhận hủy tải xuống',
       content: 'Bạn có chắc chắn muốn hủy quá trình tải xuống này?',
@@ -93,8 +100,9 @@ const App: React.FC = () => {
           setFilename('')
           setMessageLog('')
           setLoading(false)
-          setIsPaused(false)
+          // setIsPaused(false)
         } catch (err) {
+          console.error(err)
           message.error('Không thể hủy tải.')
         }
       }
@@ -102,7 +110,7 @@ const App: React.FC = () => {
   }
 
   useEffect(() => {
-    const handlePasteShortcut = async (e: KeyboardEvent) => {
+    const handlePasteShortcut = async (e: KeyboardEvent): Promise<void> => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
         try {
           const text = await navigator.clipboard.readText()
@@ -114,6 +122,7 @@ const App: React.FC = () => {
             setChannel(matched[1])
           }
         } catch (err) {
+          console.error(err)
           message.error('Có lỗi xảy ra khi dán URL')
         }
       }
@@ -124,7 +133,7 @@ const App: React.FC = () => {
   }, [])
 
   useEffect(() => {
-    const handleProgress = async (data: any) => {
+    const handleProgress = (data: ProgressData): void => {
       if (data.type === 'progress') {
         setProgress(data.percent)
         setSpeed(data.speed)
@@ -142,7 +151,7 @@ const App: React.FC = () => {
           message.warning('Đã huỷ tải xuống.')
         } else if (data.success) {
           message.success('Tải xuống thành công!')
-          await window.api.openFolder(savePath)
+          window.api.openFolder(savePath)
         }
       }
     }
@@ -154,7 +163,7 @@ const App: React.FC = () => {
     return () => {
       window.api?.removeProgressListener?.()
     }
-  }, [])
+  }, [savePath])
 
   return (
     <Card style={{ margin: '40px' }}>

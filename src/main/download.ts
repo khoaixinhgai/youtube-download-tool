@@ -74,7 +74,7 @@ export function downloadFromChannel(
       '-o',
       `${outputDir}/%(autonumber)d-%(title)s.%(ext)s`,
       '--format',
-      `bv[height=${resolution}][ext=mp4][vcodec^=avc1]+ba[ext=m4a][acodec^=mp4a]/best[height=${resolution}]/best`,
+      `bestvideo[height<=${resolution}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${resolution}]/best`,
       '--merge-output-format',
       'mp4',
       '--write-thumbnail',
@@ -90,11 +90,15 @@ export function downloadFromChannel(
     const proc = spawn(ytDlpPath, ytDlpArgs)
     currentDownloadProcess = proc
 
-    const handleData = (chunk: Buffer) => {
+    let errorLog = ''
+    const handleData = (chunk: Buffer, isError = false): void => {
       const lines = chunk.toString().split('\n').filter(Boolean)
 
       for (const line of lines) {
         const cleanLine = line.replace('\r', '').trim()
+        if (isError) {
+          errorLog += cleanLine + '\n'
+        }
         onProgress({ type: 'log', message: cleanLine })
 
         const fileMatch = cleanLine.match(/Destination:\s(.+)/)
@@ -122,8 +126,8 @@ export function downloadFromChannel(
       }
     }
 
-    proc.stdout.on('data', handleData)
-    proc.stderr.on('data', handleData)
+    proc.stdout.on('data', (data) => handleData(data, false))
+    proc.stderr.on('data', (data) => handleData(data, true))
 
     proc.on('close', (code: number) => {
       currentDownloadProcess = null
@@ -133,7 +137,11 @@ export function downloadFromChannel(
         return resolve()
       }
       onProgress({ type: 'done', success: code === 0 })
-      code === 0 ? resolve() : reject(new Error(`Download failed with code ${code}`))
+      if (code === 0) {
+        resolve()
+      } else {
+        reject(new Error(`Download failed with code ${code}\nDetails:\n${errorLog}`))
+      }
     })
 
     proc.on('error', (err) => {
