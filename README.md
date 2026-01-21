@@ -3,6 +3,22 @@
 A powerful, cross-platform YouTube downloader built with **Electron**, **React**, and **TypeScript**.
 It leverages [yt-dlp](https://github.com/yt-dlp/yt-dlp) for downloading and [ffmpeg](https://ffmpeg.org/) for media processing, ensuring high-quality downloads (4K/8K) with merged audio and video.
 
+<p align="center">
+  <a href="https://github.com/khoaixinhgai/youtube-download-tool/releases/latest">
+    <img src="https://img.shields.io/github/v/release/khoaixinhgai/youtube-download-tool?style=for-the-badge&label=Latest%20Release&color=blue" alt="Latest Release">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/khoaixinhgai/youtube-download-tool/releases/latest/download/YouTubeDownloader-1.0.0-win.zip">
+    <img src="https://img.shields.io/badge/Windows-Download-blue?style=for-the-badge&logo=windows" alt="Download for Windows">
+  </a>
+  &nbsp;&nbsp;
+  <a href="https://github.com/khoaixinhgai/youtube-download-tool/releases/latest/download/YouTubeDownloader-1.0.0.dmg">
+    <img src="https://img.shields.io/badge/macOS-Download-white?style=for-the-badge&logo=apple&logoColor=black" alt="Download for macOS">
+  </a>
+</p>
+
 ## Features
 
 - 🎥 **High Quality Downloads**: Supports 4K, 1080p, 720p, etc.
@@ -17,7 +33,7 @@ It leverages [yt-dlp](https://github.com/yt-dlp/yt-dlp) for downloading and [ffm
 
 ```bash
 ├── resources/
-│   ├── bin/              # External binaries (yt-dlp, ffmpeg)
+│   ├── bin/              # External binaries (Downloaded automatically via postinstall)
 │   │   ├── essentials/   # (Temp folder for building)
 │   │   ├── ffmpeg        # macOS ffmpeg
 │   │   ├── ffmpeg.exe    # Windows ffmpeg (Essentials build)
@@ -47,6 +63,7 @@ cd youtube-download-tool
 
 # Install dependencies
 yarn install
+# Note: This will automatically download necessary binaries (yt-dlp, ffmpeg) to resources/bin/
 ```
 
 ### Development Mode
@@ -60,6 +77,7 @@ yarn dev
 ## Building for Production
 
 ### 1. For Windows (Portable Zip)
+
 This command builds a portable Zip containing the executable and all Windows-specific dependencies (yt-dlp.exe, ffmpeg.exe).
 **Note:** You can run this command on macOS! It uses a portable build strategy.
 
@@ -69,11 +87,13 @@ yarn build:win
 ```
 
 > **Usage on Windows:**
+>
 > 1. Download/Transfer the `.zip` file to Windows.
 > 2. Right-click > **"Extract All..."**.
 > 3. Open the folder and run **`YouTubeDownloader.exe`**.
 
 ### 2. For macOS
+
 Builds a `.dmg` installer for macOS.
 
 ```bash
@@ -84,14 +104,17 @@ yarn build:mac
 ## Troubleshooting
 
 ### "HTTP Error 403: Forbidden"
+
 - **Cause:** YouTube may block requests from outdated `yt-dlp` versions or specific IPs.
 - **Fix:** restart the app or check if `resources/bin/yt-dlp_macos` (or `.exe`) is up to date.
 
 ### "Format Not Available" or "Only Audio"
+
 - **Cause:** Requested resolution (e.g., 1080p) might not exist, or `ffmpeg` is missing to merge streams.
 - **Fix:** The app now includes `ffmpeg` automatically. Ensure you unzip the Windows build fully.
 
 ### "This app can't run on your PC" (Windows)
+
 - **Cause:** Running an x64 app on an ARM machine (like Surface Pro X or Mac Parallels) without emulation, or vice versa.
 - **Fix:** Use the standard `yarn build:win` (x64) for most valid Windows PCs.
 
